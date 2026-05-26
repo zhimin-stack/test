@@ -1,0 +1,777 @@
+```html:營養學150題刷題系統_可分享版:index.html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>營養學 150 題全收錄刷題系統</title>
+    <!-- 引入 Tailwind CSS (用於樣式設計) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 React 與 ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- 引入 Babel (用於在瀏覽器解析 JSX) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- 圖示元件 (取代外部依賴) ---
+        const ChevronRight = ({size=20, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
+        const ChevronLeft = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
+        const CheckCircle = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>;
+        const XCircle = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>;
+        const RotateCcw = ({size=20, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
+        const BookOpen = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+        const AlertCircle = ({size=20, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>;
+        const Eye = ({size=20, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>;
+        const ListIcon = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>;
+        const Award = ({size=48, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>;
+
+        // --- 完整的原始題庫資料 ---
+        const rawData = `食品生技學程營養學期末考試題庫
+姓名：        學號：
+一、 醣類 (Carbohydrates) 20 題
+下列高纖維食物中，何者含有最多的半纖維素（hemicellulose）？  (A) 蔬菜 (B) 水果 (C) 豆類 (D) 全麥穀物和麩皮。
+答案：(D)
+關於抗性澱粉（resistant starch）的敘述，下列何者正確？  (A) 過熟香蕉中含量豐富 (B) 煮熟白飯冷卻後含量降低 (C) 對人體消化道酵素具抗性 (D) 無法被腸道微生物利用。
+答案：(C)
+人體消化道中水解支鏈澱粉  α (1−6)  鍵結的酵素（isomaltase）是由何者分泌？  (A) 唾液腺 (B) 胃 (C) 胰臟 (D) 小腸黏膜細胞（enterocyte）。
+答案：(D)
+蔗糖（Sucrose）在人體消化道中的消化作用起始於何處？  (A) 口腔 (B) 幽門 (C) 胃底 (D) 十二指腸。
+答案：(D)
+糖解作用中，丙酮酸（pyruvate）轉換為乙醯輔酶 A（acetyl-CoA）所需的酵素為何？  (A) acetyl-CoA dehydrogenase (B) acetyl-CoA synthetase (C) pyruvate dehydrogenase complex (D) pyruvate carboxylase。
+答案：(C)
+關於六碳醣單磷酸路徑（HMP shunt）的敘述，下列何者錯誤？  (A) 主要提供 NADH (B) 可提供核糖 (C) 需  Mg 2+ 參與 (D) 需轉酮酶參與。
+答案：(A) （註：主要提供 NADPH）
+一般而言，何者是醣類代謝中最重要的酵素輔因子（cofactor）？  (A)  Mg 2+ (B)  Fe 2+ (C)  Zn 2+ (D)  Cu 2+ 。
+答案：(A)
+下列關於「米」的敘述，何者正確？  (A) 吸水性：糯米 > 秈米 > 粳米 (B) 黏性：糯米 > 粳米 > 秈米 (C) 膨脹性：粳米 > 糯米 > 秈米。
+答案：(B)
+欲符合每日飲食指南建議，120 克穀類中應包含多少公克未精製全穀？  (A) 60g (B) 40g (C) 30g (D) 20g。
+答案：(B) （註：應佔 1/3 以上）
+運動 30 分鐘內，肌肉主要依靠何種能量來源？  (A) 血糖 (B) 肌肉肝醣 (C) 肝臟肝醣 (D) 游離脂肪酸。
+答案：(B)
+葡萄糖（Glucose）在體內完全氧化代謝，產生的  CO 2 與消耗的  O 2 分子比（呼吸商）為何？  (A) 0.7 (B) 0.8 (C) 1.0 (D) 0.66。
+答案：(C)
+關於升糖素（glucagon）的作用機制，下列何者正確？  (A) 使肝醣合成酶磷酸化而具活性 (B) 使肝醣磷酸化酶磷酸化而具活性 (C) 減少 fructose-2,6-bisphosphate 含量。
+答案：(B)
+下列何種物質在糖解作用中，高濃度時會抑制反應進行？  (A) AMP (B) Acetyl-CoA (C) Glucose-6-phosphate (D)  F −2,6− BP 。
+答案：(C)
+學齡前兒童長期以 100% 蘋果汁取代飲水，與下列何種問題「最無關」？  (A) 骨骼發育不良 (B) 慢性腹瀉 (C) 降低食慾 (D) 碳水化合物吸收不良。
+答案：(A)
+關於碳水化合物的營養標示，下列何者正確？  (A) 糖的標示值包含原料含有的糖及額外添加的糖 (B) 菊糖不需標示。
+答案：(A)
+比較 Glucose、Fructose、Galactose 三者的吸收速率，何者最快？
+答案：Galactose > Glucose > Fructose 。
+全穀雜糧類中，哪種加工方式最能保留維生素 B 群？
+答案：以未精製全穀（如糙米）取代精製穀類 。
+人體內哪種器官負責調節血糖濃度，將葡萄糖轉化為肝醣儲存？
+答案：肝臟 。
+唾液中的澱粉酶（salivary amylase）主要水解澱粉的哪種鍵結？
+答案： α (1−4)  鍵結 。
+乳糖不耐症（Lactose intolerance）與哪種基因變異有關？
+答案：乳糖酶（LCT）基因 。
+--------------------------------------------------------------------------------
+二、 蛋白質 (Proteins) 20 題
+當營養不良導致體液失衡並引起水腫時，通常是因為血中哪種蛋白質下降？  (A) 白蛋白 (B) 蛋白 (C) 鐵蛋白 (D) 球蛋白。
+答案：(A)
+下列何者屬於支鏈胺基酸（branched-chain amino acid, BCAA）？  (A) 離胺酸 (B) 纈胺酸（valine） (C) 甘胺酸 (D) 絲胺酸。
+答案：(B)
+與皮膚、毛髮顏色有關的黑色素是由下列何種胺基酸轉變而來？  (A) 色胺酸 (B) 酪胺酸（tyrosine） (C) 麩胺酸 (D) 丙胺酸。
+答案：(B)
+下列何者是純素（Vegan）飲食的特性？  (A) 只吃植物性來源食物 (B) 吃蛋奶素 (C) 吃乳素。
+答案：(A)
+人體在下列哪種情況下，每公斤體重需要的蛋白質最多？  (A) 感冒 (B) 嚴重燒傷 (C) 肌肉訓練 (D) 高燒。
+答案：(B)
+體內「正氮平衡」最常見於下列哪種族群？  (A) 健康成人 (B) 懷孕婦女 (C) 飢餓者 (D) 嚴重受傷者。
+答案：(B)
+計算蛋白質需求量的氮平衡公式中，氮攝取量如何換算成蛋白質？  (A) 氮  ×  4 (B) 氮  ×  6.25 (C) 氮  ×  9 (D) 氮  ×  7。
+答案：(B)
+下列關於角質蛋白（keratin）的敘述，何者正確？  (A) 是頭髮及指甲中主要的蛋白質 (B) 屬於蛋白質三級結構。
+答案：(A)
+白胺酸（leucine）在體內代謝後，「不會」產生下列哪種產物？  (A) 尿素 (B) 酮體 (C) 脂肪酸 (D) 葡萄糖。
+答案：(D)
+義務性氮流失（obligatory loss）在計算氮平衡時，通常設定為多少公克？  (A) 2g (B) 4g (C) 6.25g (D) 10g。
+答案：(B)
+胺基酸在體內完全氧化代謝，其呼吸商（RQ）約為多少？  (A) 0.7 (B) 0.8 (C) 1.0 (D) 1.2。
+答案：(B)
+關於蛋白質品質不佳對氮平衡的影響，會導致下列何種狀況？  (A) 正氮平衡 (B) 負氮平衡 (C) 氮平衡。
+答案：(B)
+學校營養午餐建議蛋白質供應量應佔總熱量的多少百分比？  (A) 10% (B) 16% (C) 25% (D) 30%。
+答案：(B)
+母乳中哪種成分的比例明顯低於牛乳？  (A) 乳糖 (B) 脂肪 (C) 蛋白質 (D) 維生素 A。
+答案：(C)
+下列哪種酵素負責在胃部初步分解蛋白質？
+答案：胃蛋白酶（pepsin） 。
+蛋白質標示中，若產品強調「高蛋白」，其含量需符合什麼規範？
+答案：需符合食品標示法規之營養宣稱標準 。
+體內蛋白質合成的主要場所是細胞內的哪個構造？
+答案：核糖體（ribosome） 。
+缺乏哪種胺基酸會導致兒童發育遲緩？
+答案：必需胺基酸（essential amino acids） 。
+色胺酸（tryptophan）是哪種維生素的前驅物？
+答案：菸鹼酸（niacin/NAD） 。
+受傷或臥病導致組織過度分解時，會呈現何種氮平衡狀態？
+答案：負氮平衡 。
+--------------------------------------------------------------------------------
+三、 脂質 (Lipids) 20 題
+下列油脂中，亞麻油酸（linoleic acid）含量最少的是？  (A) 椰子油 (B) 雞油 (C) 玉米油 (D) 芥花籽油。
+答案：(A)
+下列有關必需脂肪酸的敘述，何者「錯誤」？  (A) 必需從食物中獲得 (B) 亞麻油酸（LA）是主要  ω −3  脂肪酸。
+答案：(B) （註：亞麻油酸是  ω −6 ）
+下列何種物質可參與脂質消化，並透過「腸肝循環」返回肝臟重新利用？  (A) 肝素 (B) 膽汁 (C) 胰脂肪酶 (D) 膽囊收縮素。
+答案：(B)
+關於脂肪的消化作用，下列敘述何者正確？  (A) 主要在小腸進行 (B) 膽汁可以分解脂質 (C) 95% 脂肪在大腸吸收。
+答案：(A)
+Statins 類藥物主要藉由抑制何種酵素來降低血中膽固醇？  (A) Cyclooxygenase (B) HMG-CoA reductase。
+答案：(B)
+以間接能量測定儀測得 RQ 為 0.72，顯示個案可能攝取何種飲食？  (A) 高碳水化合物 (B) 高脂 (C) 高蛋白 (D) 酒精。
+答案：(B)
+下列有關防止油脂酸敗的方法，何者「錯誤」？  (A) 添加抗氧化劑 (B) 放置在光線充足的地方 (C) 密封保存。
+答案：(B)
+下列何者「不是」膽固醇的代謝產物？  (A) 皮質醇 (B)  β -sitosterol (C) 膽酸 (D) 雌二醇。
+答案：(B) （註：這是植物固醇）
+關於動脈粥狀硬化（atherosclerosis）的敘述，何者「錯誤」？  (A) 起始於內皮細胞損傷 (B) 脂肪條紋平均分布於各處。
+答案：(B) （註：通常好發於特定分支處）
+偶數碳飽和脂肪酸經  β -氧化（ β -oxidation），每個回合可產生多少個 ATP？  (A) 12 (B) 14 (C) 16 (D) 18。
+答案：(B) （註：1 NADH + 1 FADH2 = 2.5+1.5=4，加上釋出的 Acetyl-CoA 進入 TCA 循環產生 10，合計 14）
+油脂的營養標示中，下列何者為強制標示項目？  (A) 膽固醇 (B) 飽和脂肪 (C) 單元不飽和脂肪。
+答案：(B)
+學校營養午餐建議脂質供應量應佔總熱量的多少？  (A)  ≤10%  (B)  ≤30%  (C)  50% 。
+答案：(B)
+下列哪種脂蛋白負責將膽固醇從周邊組織運回肝臟（好膽固醇）？
+答案：高密度脂蛋白（HDL） 。
+ω −3  脂肪酸的第一個雙鍵位於甲基端的第幾個碳上？
+答案：第 3 個碳 。
+烹調後的廢油應如何處理才符合環保與衛生？  (A) 倒入下水道 (B) 交給合法回收業者。
+答案：(B)
+中鏈三酸甘油酯（MCT）的消化路徑與長鏈有何不同？
+答案：MCT 可直接經門靜脈吸收進入肝臟 。
+維生素 A、D、E、K 屬於哪一類營養素？
+答案：脂溶性維生素 。
+油脂中添加 BHA 或 BHT 的目的是什麼？
+答案：防止油脂氧化酸敗（抗氧化劑） 。
+膽汁排泄出的量約有多少百分比會由糞便排出？  (A) 5% (B) 25% (C) 50%。
+答案：(A) （註：95% 會被回收）
+脂肪細胞中負責分解三酸甘油酯的關鍵酵素為何？
+答案：荷爾蒙敏感性脂解酶（HSL） 。
+--------------------------------------------------------------------------------
+四、 維生素 (Vitamins) 20 題
+色胺酸（tryptophan）代謝形成菸鹼酸（NAD）的過程中，主要需要哪些營養素協助？  (A) 維生素 B1, B2 (B) 維生素 B2, B6 (C) 維生素 B6, B12 (D) 維生素 B1, B6。
+答案：(B)
+下列何處的維生素 C 濃度，是評估體內維生素 C 儲存量的最佳指標？  (A) 血清 (B) 尿液 (C) 白血球 (D) 紅血球。
+答案：(C)
+維生素 B2 以何種型式擔任琥珀酸去氫酶（succinate dehydrogenase）等酵素的輔酶？  (A) FMN (B) FAD (C) NAD (D) PLP。
+答案：(B)  （註：來源提到 B2 以 FMN 或 FAD 形式參與代謝）
+關於維生素 B12 的 DRIs 敘述，下列何者「錯誤」？  (A) 成年人僅訂定 AI (B) 嬰兒 AI 依據母乳攝取量 (C) 沒有上限攝取量 (D) 考量預防貧血。
+答案：(A)  （註：成年人有訂定 RDA）
+視網膜的桿狀細胞中，何種物質與視紫蛋白結合形成視紫質？  (A) 11-順式-視網醛 (B) 全-反式-視網醛 (C) 11-順式-視網醇 (D) 全-反式-視網醇。
+答案：(A)
+兒童骨骼無法正常礦化導致佝僂症（rickets），是因為缺乏何種維生素？  (A) 維生素 A (B) 維生素 D (C) 維生素 E (D) 維生素 K。
+答案：(B)
+維生素 K2（Menaquinones）主要由人體哪一部位的細菌合成？  (A) 結腸 (B) 十二指腸 (C) 胃 (D) 空腸。
+答案：(A)
+治療肺結核藥物 INH 會抑制何種維生素活性，長期使用易致神經炎？  (A) B1 (B) B6 (C) B12 (D) 葉酸。
+答案：(B)
+關於維生素 C 的吸收，下列敘述何者正確？  (A) 劑量越高吸收率越高 (B) 主要在小腸吸收 (C) 脫氫抗壞血酸經由主動運輸吸收。
+答案：(B)
+下列哪種維生素缺乏會導致巨球型貧血（Megaloblastic anemia）？  (A) 維生素 B6 (B) 維生素 B12 (C) 維生素 C (D) 維生素 A。
+答案：(B)
+初乳中所含的哪種成分比成熟乳高？  (A) 脂溶性維生素 (B) 水溶性維生素 (C) 脂肪 (D) 碳水化合物。
+答案：(A)
+生物素（Biotin）在人體主要由何處排出？  (A) 膽汁 (B) 尿液 (C) 汗水 (D) 糞便。
+答案：(B)  （註：來源提到排除量可能高於攝取量）
+維生素 C 缺乏所引起的「4H」症狀不包括下列何者？  (A) 溶血（Hemolysis） (B) 出血（Hemorrhage） (C) 骨迷路出血 (D) 皮膚過度角化。
+答案：(A)
+下列何種維生素與抗氧化系統有關？  (A) 維生素 E (B) 維生素 B1 (C) 維生素 B12 (D) 維生素 K。
+答案：(A)
+葉酸（Folate）基因變異與下列哪種酵素有關？  (A) LCT (B) ALDH (C) MTHFR (D) ADH。
+答案：(C)
+維生素 A 缺乏可能出現下列何種健康問題？  (A) 夜盲症 (B) 壞血病 (C) 腳氣病 (D) 佝僂症。
+答案：(A)
+長期缺乏維生素 B1 會導致下列何種疾病？  (A) 癩皮病 (B) 腳氣病 (C) 惡性貧血 (D) 軟骨症。
+答案：(B)
+維生素 B12 吸收需要胃部隊分泌的哪種物質協助？
+答案：內因子（Intrinsic factor） 。
+維生素 E 在體內最主要的功能是什麼？
+答案：抗氧化作用，保護細胞膜免受自由基攻擊 。
+哪種維生素可促進非血基質鐵（non-heme iron）的吸收？
+答案：維生素 C 。
+--------------------------------------------------------------------------------
+五、 礦物質 (Minerals) 20 題
+根據現行 DRIs，成年人碘（Iodine）的建議攝取量為多少微克？  (A) 100 (B) 150 (C) 200 (D) 250。
+答案：(B)
+碘在人體內最主要的生理功能是合成下列何種荷爾蒙？  (A) 胰島素 (B) 生長激素 (C) 甲狀腺素 (D) 腎上腺素。
+答案：(C)
+下列何種礦物質與碘的代謝密切相關？  (A) 鉻 (B) 硒 (C) 氟 (D) 錳。
+答案：(B)
+下列何種微量元素的代謝需要經過「腸胰循環」？  (A) 鐵 (B) 鋅 (C) 銅 (D) 鉻。
+答案：(B)
+下列何種微量元素主要是經由「尿液」排泄來維持恆定？  (A) 錳 (B) 鐵 (C) 鉻 (D) 銅。
+答案：(C)
+關於鐵（Iron）的敘述，下列何者正確？  (A) 植物性來源吸收率較高 (B) 7-9 歲建議攝取量為 10mg/day (C) 缺鐵性貧血在兒童很少發生。
+答案：(B)
+下列何種營養素攝取過多會抑制「鎂」的吸收？  (A) 鈣 (B) 鉀 (C) 鈉 (D) 鐵。
+答案：(A)
+與傷口癒合（wound healing）最直接相關的礦物質是？  (A) 鈣 (B) 鋅 (C) 碘 (D) 鐵。
+答案：(B)
+礦物質「鉻」（Chromium）在體內主要與哪種荷爾蒙共同作用？  (A) 甲狀腺素 (B) 胰島素 (C) 升糖素 (D) 泌乳素。
+答案：(B)
+缺乏鐵質會導致何種類型的貧血？  (A) 巨球型貧血 (B) 小球性低血色素貧血 (C) 出血性貧血。
+答案：(B)
+哺乳期婦女建議額外增加多少公克的「鈣」攝取？  (A) 0 (B) 300 (C) 500 (D) 1000。
+答案：(A)  （註：國人 DRIs 建議哺乳期不需增加鈣，因吸收率會代償性增加）
+缺碘導致甲狀腺腫大的機制是為了引發何種激素分泌增多？  (A) T3 (B) T4 (C) TSH (D) TRH。
+答案：(C)
+人體內含量最多的礦物質為何？  (A) 磷 (B) 鈣 (C) 鉀 (D) 硫。
+答案：(B)
+下列何者是「非血基質鐵」的良好來源？  (A) 牛肉 (B) 豬血 (C) 強化穀物 (D) 雞肝。
+答案：(C)
+長期攝取高鹽飲食（鈉過多）與下列哪種疾病最相關？  (A) 高血壓 (B) 貧血 (C) 骨質疏鬆 (D) 夜盲症。
+答案：(A)
+孕婦在懷孕第三期建議增加多少鐵質攝取？
+答案：每日增加 30 mg（總量達 45 mg/day） 。
+鈣在體內除構成骨骼外，還有什麼生理功能？
+答案：參與神經傳導、肌肉收縮與血液凝固 。
+鋅缺乏最常見的臨床症狀為何？
+答案：生長遲緩、味覺減退、傷口癒合緩慢 。
+人體吸收鐵質的主要部位在何處？
+答案：十二指腸及空腸上段 。
+哪種礦物質在骨骼中與鈣共同形成羥磷灰石結晶？
+答案：磷 。
+--------------------------------------------------------------------------------
+六、 水分與能量平衡 (Water & Energy) 20 題
+當一個人的體液流失達體重的 1~2% 時，最先出現的生理反應是？  (A) 肌肉無力 (B) 昏迷 (C) 感覺口渴 (D) 心跳減慢。
+答案：(C)
+飲用酒精飲料會導致尿量增加，其主要原因為何？  (A) 抑制抗利尿激素（ADH）分泌 (B) 促進白蛋白分解 (C) 增加腎臟對鈉的重吸收。
+答案：(A)
+下列哪種狀態下，人體的基礎代謝率（BMR）會較高？  (A) 處在寒冷環境 (B) 飢餓狀態 (C) 甲狀腺功能減退 (D) 睡眠中。
+答案：(A)
+以間接能量測定儀測得 RQ 為 0.72，代表個案目前主要利用哪種營養素產能？  (A) 醣類 (B) 脂質 (C) 蛋白質 (D) 酒精。
+答案：(B)
+下列何者占每日身體總能量消耗的比例「最少」？  (A) 基礎代謝 (B) 身體活動量 (C) 食物產熱效應 (D) 熱生成（適應性產熱）。
+答案：(D)
+當血中哪種蛋白質下降時，會導致體液失衡並引起水腫？  (A) 白蛋白 (B) 鐵蛋白 (C) 球蛋白 (D) 糖蛋白。
+答案：(A)
+葡萄糖在體內完全氧化代謝，其呼吸商（RQ）為何？  (A) 0.7 (B) 0.8 (C) 1.0 (D) 0.66。
+答案：(C)
+下列何種因素會降低人體的基礎代謝率？  (A) 抽菸 (B) 炎熱環境 (C) 飢餓或節食 (D) 發燒。
+答案：(C)
+關於人體水分重吸收，大部分的鈉離子是在腎臟的哪個部位被再吸收？  (A) 近曲小管 (B) 遠曲小管 (C) 集尿管 (D) 亨利氏環。
+答案：(A)
+「脂肪組織」（Fat mass）與「除脂體重」（Fat-free mass）相比，哪者的含水量較高？
+答案：除脂體重（FFM）含水量顯著較高 。
+人體內主要調節水分平衡的器官為何？  (A) 肝臟 (B) 腎臟 (C) 肺臟 (D) 皮膚。
+答案：(B)
+長期嚴重熱量不足會導致何種氮平衡狀態？  (A) 正氮平衡 (B) 負氮平衡 (C) 氮平衡。
+答案：(B)
+酒精完全氧化代謝的呼吸商（RQ）約為多少？  (A) 1.0 (B) 0.8 (C) 0.7 (D) 0.66。
+答案：(D)
+適應性熱生成（Thermogenesis）通常發生在何種情況？
+答案：環境溫度劇烈變化或過度進食時 。
+影響 BMR 最主要的因素是下列何者？  (A) 性別 (B) 年齡 (C) 除脂體重（LBM） (D) 攝取熱量。
+答案：(C)
+測得黃小姐呼吸商為 0.8，顯示其目前飲食型態可能為？
+答案：混合型飲食（均衡攝取醣、脂、蛋白質） 。
+體重 60 公斤成人，每日至少需排出多少毫升尿液以排除代謝廢物？
+答案：約 500 毫升（義務性尿液排出量） 。
+甲狀腺功能亢進時，BMR 會呈現何種變化？
+答案：明顯升高 。
+人體散熱最主要的方式是什麼？
+答案：輻射（Radiance）與蒸發（Evaporation，如排汗） 。
+發燒（Fever）會使 BMR 增加，體溫每上升 1℃，BMR 約增加多少百分比？
+答案：約增加 13% 。 （註：此為營養學一般常識）
+--------------------------------------------------------------------------------
+七、 均衡飲食 (Balanced Diet) 20 題
+根據每日飲食指南建議，若攝取 120 公克的穀類，其中應包含多少公克的未精製全穀類才符合比例？  (A) 20 (B) 30 (C) 40 (D) 60。
+答案：(C) （註：應佔 1/3 以上）
+地中海飲食（Mediterranean Diet）建議的主要脂肪來源為何？  (A) 豬油 (B) 奶油 (C) 橄欖油及堅果 (D) 椰子油。
+答案：(C)
+下列何者「不是」地中海飲食型態的特點？  (A) 食用大量蔬菜與水果 (B) 選擇全穀雜糧類 (C) 高頻率攝取紅肉 (D) 適量攝取魚類與蛋。
+答案：(C)
+根據學校午餐食物內容及營養基準，蔬食（無肉）日的脂肪供應量應佔總熱量的多少百分比以下？  (A) 10% (B) 20% (C) 30% (D) 40%。
+答案：(C)
+在設計蔬食日菜單時，蛋白質的供應量約應佔總熱量的百分之幾？  (A) 10% (B) 16% (C) 25% (D) 30%。
+答案：(B)
+關於蔬食日蔬菜類的供應，基準建議深色蔬菜應佔多少比例以上？  (A) 1/3 (B) 1/2 (C) 2/3 (D) 全部皆是。
+答案：(C)
+依據素食飲食指南建議（2,000 大卡基準），所有素食者每日建議攝取幾份堅果種子類？  (A) 0.5 份 (B) 1 份 (C) 2 份 (D) 3 份。
+答案：(B)
+吃全素者為了補充鈣質，每日建議攝取 1 份以上鈣質較高的何種食物？  (A) 豆漿 (B) 嫩豆腐 (C) 傳統豆腐或豆乾 (D) 綠豆。
+答案：(C)
+關於包裝食品營養標示中的「糖」，下列敘述何者正確？  (A) 僅指額外添加的糖 (B) 包含原料原有的糖及額外添加的糖 (C) 不包含乳糖 (D) 必須與膳食纖維合併標示。
+答案：(B)
+地中海飲食被認為與健康相關，主要是因為它能降低何種疾病的罹病機率？  (A) 骨質疏鬆 (B) 夜盲症 (C) 肥胖相關的心臟病與中風 (D) 佝僂症。
+答案：(C)
+下列哪一種膳食調查法最常採用「限制型問卷」？  (A) 24 小時回憶法 (B) 飲食頻率法 (C) 飲食記錄法 (D) 盤存法。
+答案：(B)
+聯合國糧食及農業組織（FAO）估計各國食物供應量（food supply）時，主要採用何種資料？  (A) 國民營養調查 (B) 糧食平衡表 (C) 家庭收支調查 (D) 食品流通履歷。
+答案：(B)
+在社區營養計畫中，使用 SWOT 分析法分析學生的「營養知識」及「購買力」，這屬於哪一項分析？  (A) S（優勢） (B) W（劣勢） (C) O（機會） (D) T（威脅）。
+答案：(A)
+蔬食日因無肉品供應，需特別注意哪種微量營養素的攝取可能不足？  (A) 維生素 C (B) 維生素 B 群及鐵 (C) 鉀 (D) 鎂。
+答案：(B)
+健康食品的保健效能宣稱應依據何者為準？  (A) 藥典 (B) 廠商自行實驗 (C) 中央主管機關查驗登記之內容 (D) 廣告代理商建議。
+答案：(C)
+根據每日飲食指南，國人應以何種比例的未精製全穀取代精製穀類？  (A) 1/4 (B) 1/3 (C) 1/2 (D) 2/3。
+答案：(B)
+在 5W1H 計畫執行中，計畫目標的「執行內容」屬於下列何者？  (A) Why (B) When (C) What (D) How。
+答案：(C)
+學校營養午餐建議全穀雜糧類每餐供應約多少份？  (A) 2.5 份 (B) 3.5 份 (C) 4.5 份 (D) 5.5 份。
+答案：(C)
+下列何種方式最能提升學童對於蔬食餐食的接受度？  (A) 增加炸物比例 (B) 利用鮮豔的熟食配色提升進食意願 (C) 減少調味 (D) 禁止販售肉品。
+答案：(B)
+計算蛋白質攝取量時，氮攝取量 1 公克相當於多少公克蛋白質？  (A) 4 (B) 6.25 (C) 7 (D) 9。
+答案：(B)
+--------------------------------------------------------------------------------
+八、 生命期營養 (Life-cycle Nutrition) 20 題
+等體積的母乳與牛乳相比，滿月後的母乳中哪種成分含量明顯較「低」？  (A) 乳糖 (B) 蛋白質 (C) 脂肪 (D) 膽固醇。
+答案：(B)
+現行國人 DRIs 中，將「嬰兒期」劃分為哪兩個階段？  (A) 0~6 月、7~12 月 (B) 0~1 月、2~5 月 (C) 0~3 月、4~12 月 (D) 0~2 月、3~12 月。
+答案：(A)
+關於學童期鐵質的建議攝取量，下列何者正確？  (A) 7~9 歲為 10 mg/day (B) 10~12 歲為 10 mg/day (C) 7~9 歲為 15 mg/day (D) 不論年齡皆為 15 mg/day。
+答案：(A)
+對於母親哺育嬰兒的建議，下列何者符合我國國民飲食指標？  (A) 完全配方奶到 6 個月 (B) 完全哺育母奶到 6 個月，之後再適時添加副食品 (C) 4 個月即斷奶換副食品 (D) 僅提供母奶到 1 歲。
+答案：(B)
+針對 70 歲長者進行 MNA 評估，若得分為 20 分，其營養狀況判定為何？  (A) 良好 (B) 有潛在營養不良的危險 (C) 營養不良 (D) 無法判別。
+答案：(B)
+幼兒出現齲齒頻率高的現象，可能與下列哪種微量營養素缺乏最相關？  (A) 銅 (B) 鐵 (C) 碳水化合物 (D) 氟。
+答案：(D)
+當 65 歲以上人口占總人口比率達 14% 時，該社會稱為？  (A) 高齡化社會 (B) 高齡社會 (C) 超高齡社會 (D) 老年社會。
+答案：(B)
+下列何項體位指標常用於「間接推估」無法站立長者的身高？  (A) 膝長 (B) 上臂長 (C) 手掌長 (D) 腳掌長。
+答案：(A)
+學齡前兒童長期以 100% 蘋果汁取代飲水，與下列何種問題「最無關」？  (A) 骨骼發育不良 (B) 慢性腹瀉 (C) 降低食慾 (D) 碳水化合物吸收不良。
+答案：(A)
+碘在人體內最主要的功能是合成何種荷爾蒙？  (A) 胰島素 (B) 生長激素 (C) 甲狀腺素 (D) 腎上腺素。
+答案：(C)
+長期食用哪種食鹽，若未額外補充碘，可能增加甲狀腺腫（Goiter）的風險？  (A) 含碘鹽 (B) 玫瑰鹽 (C) 海帶鹽 (D) 精製鹽。
+答案：(B)
+關於鐵的敘述，下列何者錯誤？  (A) 動物性來源吸收率較高 (B) 鐵缺乏會影響兒童認知功能 (C) 缺鐵性貧血在兒童很少發生 (D) 7~9 歲建議量為 10mg。
+答案：(C)
+懷孕婦女（孕婦）每日碘的建議攝取量為多少微克？  (A) 150 (B) 200 (C) 225 (D) 250。
+答案：(C)
+哺乳期婦女每日碘的建議攝取量為多少微克？  (A) 150 (B) 225 (C) 250 (D) 300。
+答案：(C)
+初乳（Colostrum）中何種成分含量比成熟乳高？  (A) 脂肪 (B) 碳水化合物 (C) 脂溶性維生素 (D) 水溶性維生素。
+答案：(C)
+兒童缺乏維生素 D 會導致何種骨骼疾病？  (A) 骨質疏鬆 (B) 佝僂症 (C) 軟骨症 (D) 壞血病。
+答案：(B)
+根據第八版 DRIs，51~70 歲長者建議每日攝取多少毫克的鈣？  (A) 800 (B) 1000 (C) 1200 (D) 1500。
+答案：(B)
+嬰兒期 B12 的足夠攝取量（AI）是依據何者訂定？  (A) 體重比例 (B) 母乳哺餵嬰兒的平均攝取量 (C) 臨床缺乏症狀 (D) 血液生化指標。
+答案：(B)
+運動 30 分鐘內，肌肉主要依靠何種能量來源？  (A) 血糖 (B) 肌肉肝醣 (C) 肝臟肝醣 (D) 游離脂肪酸。
+答案：(B)
+碘缺乏會引發何種激素分泌增多，進而促使甲狀腺細胞增生肥大？  (A) T3 (B) T4 (C) TSH (D) TRH。
+答案：(C)
+--------------------------------------------------------------------------------
+九、 生理學與生物化學 (15 題)
+關於人體在不同狀態下的基礎代謝率（BMR），下列組合何者正確？  ①處在寒冷環境 ②處在炎熱環境 ③飢餓 ④甲狀腺功能減退 ⑤抽菸。 (A) ①②④ (B) ②③⑤ (C) ①②⑤ (D) ①④⑤。  
+答案：(C)
+色胺酸（tryptophan）代謝形成 NAD 的過程中，需要哪些營養素協助何種酵素？  ①維生素 B1/Formidase ②維生素 B2/Kynurenine monooxygenase ③維生素 B6/Kynureninase ④維生素 B12/Kynureninase。 (A) ①② (B) ②③ (C) ③④ (D) ①④。  
+答案：(B)
+關於腎臟對鈉離子再吸收的敘述，下列何者正確？  (A) 大部分在近曲小管再吸收 (B) 缺乏醛固酮時近曲小管不吸收鈉 (C) 遠曲小管完全不受醛固酮調控 (D) 鈉再吸收主要由腎上腺髓質調控。  
+答案：(A)
+關於升糖素（glucagon）的作用機制，下列敘述何者正確？  (A) 使肝醣合成酶磷酸化而具活性 (B) 使肝醣磷酸化酶磷酸化而具活性 (C) 減少 cAMP 濃度 (D) 抑制 PEPCK 基因轉錄。  
+答案：(B)
+下列何種酵素「未」參與脂肪細胞內三酸甘油酯的分解？  (A) 荷爾蒙敏感性脂解酶 (HSL) (B) 脂蛋白脂解酶 (LPL) (C) 三酸甘油酯脂解酶 (D) 單酸甘油酯脂解酶。  
+答案：(B)
+偶數碳飽和脂肪酸經 β-氧化，每一回合可產生多少 ATP？（以 1 NADH=2.5, 1 FADH2=1.5 ATP 計算）  (A) 12 (B) 14 (C) 16 (D) 18。  
+答案：(B)
+關於真核生物 mRNA 轉錄作用的敘述，何者正確？  (A) RNA 聚合酶 II 可與增強子及啟動子結合 (B) 過程不含內含子 (C) 剪接作用會移除內含子 (D) 3' 末端會加上帽子結構。  
+答案：(C)
+關於熱量代謝的呼吸商（RQ）敘述，下列何者「錯誤」？  (A) 葡萄糖完全氧化 RQ 為 1.0 (B) 長鏈脂肪酸完全氧化 RQ 為 0.7 (C) 胺基酸完全氧化 RQ 約為 0.8 (D) 酒精完全氧化 RQ 為 0.85。  
+答案：(D) （註：酒精為 0.66）
+下列關於「基因變異」與食物耐受度的敘述，何者「錯誤」？  (A) LCT 變異與乳糖不耐有關 (B) ALDH 變異與咖啡因耐受度有關 (C) MTHFR 變異與葉酸需求有關 (D) ADH 變異與酒精代謝有關。  
+答案：(B)
+琥珀醯輔酶 A 合成酶（succinyl-CoA synthetase）的作用特點為何？  (A) 屬於受質層次磷酸化 (B) 需經電子傳遞鏈產生 ATP (C) 產生 NADH (D) 屬於無氧代謝。  
+答案：(A)
+輔酶 A（coenzyme A）的部分結構來自下列哪種維生素？  (A) 菸鹼酸 (B) 泛酸 (C) 葉酸 (D) 生物素。  
+答案：(B)
+關於醣解作用的調節，下列何種物質高濃度時會抑制反應？  (A) AMP (B) Acetyl-CoA (C) Glucose-6-phosphate (D) Fructose-2,6-bisphosphate。  
+答案：(C)
+人體內何種蛋白質下降會導致體液失衡並引起水腫？  (A) 白蛋白 (B) 鐵蛋白 (C) 球蛋白 (D) 肌紅蛋白。  
+答案：(A)
+地中海型貧血（Thalassemia）的主要致病原因為何？  (A) 缺鐵 (B) 缺乏維生素 B12 (C) 血紅素基因變異 (D) 蛋白質攝取不足。  
+答案：(C)
+與皮膚、毛髮顏色有關的黑色素是由哪種胺基酸轉變而來？  (A) 酪胺酸（tyrosine） (B) 色胺酸 (C) 離胺酸 (D) 纈胺酸。  
+答案：(A)  
+--------------------------------------------------------------------------------
+十、 營養學 (15 題)
+根據現行國人 DRIs，關於「碘」的建議攝取量組合何者正確？  ①成人 150 μg ②孕婦 225 μg ③哺乳婦 250 μg。 (A) ①② (B) ②③ (C) ①③ (D) ①②③。  
+答案：(D)
+關於「氮平衡」的狀態判定，下列敘述何者錯誤？  (A) 健康成人通常處於氮平衡 (B) 嚴重燒傷者處於正氮平衡 (C) 生長中兒童處於正氮平衡 (D) 蛋白質品質不佳會導致負氮平衡。  
+答案：(B)
+維生素 B12 缺乏與下列哪種貧血最相關？  (A) 小球性貧血 (B) 巨球型貧血 (C) 鐮刀型貧血 (D) 惡性貧血。 
+答案：(B)
+關於維生素 C 的敘述，下列組合何者「錯誤」？  (A) 白血球濃度是儲存量最佳指標 (B) 缺乏會引起出血 (C) 高劑量補充可無限提升吸收率 (D) 參與 4-hydroxyproline 形成。  
+答案：(C)
+下列何種微量元素的代謝需經過「腸胰循環」（enteropancreatic circulation）？  (A) 鐵 (B) 鋅 (C) 銅 (D) 鉻。  
+答案：(B)
+關於抗性澱粉（resistant starch）的正確敘述為何？  (A) 過熟香蕉含量高 (B) 煮熟冷卻後含量降低 (C) 具酵素水解抗性 (D) 無法被腸道菌利用。  
+答案：(C)
+欲符合每日飲食指南，120g 穀類中應包含多少「未精製全穀」？  (A) 30g (B) 40g (C) 60g (D) 80g。  
+答案：(B)
+嬰兒期的現行 DRIs 階段劃分為？  (A) 0-6月、7-12月 (B) 0-4月、5-12月 (C) 0-3月、4-12月 (D) 僅劃分為一階段。  
+答案：(A)
+母乳與牛乳相比，滿月後的母乳中哪種成分顯著較低？  (A) 乳糖 (B) 蛋白質 (C) 脂肪 (D) 鈣。  
+答案：(B)
+關於「鐵」的敘述，下列何者正確？  (A) 7-9 歲建議量為 15mg/day (B) 缺鐵性貧血在兒童極罕見 (C) 動物性來源吸收率優於植物性 (D) 鐵缺乏不影響認知。  
+答案：(C)
+長期以 100% 蘋果汁取代飲水，最不可能導致幼兒出現何種問題？  (A) 骨骼發育不良 (B) 慢性腹瀉 (C) 碳水化合物吸收不良 (D) 食慾降低。  
+答案：(A)
+地中海飲食型態與健康的關聯不包括？  (A) 降低肥胖相關心臟病 (B) 預防失智 (C) 降低糖尿病風險 (D) 預防夜盲症。  
+答案：(D)
+30 分鐘內的短時間運動，肌肉主要依靠何種能量？  (A) 血糖 (B) 肌肉肝醣 (C) 肝臟肝醣 (D) 脂肪酸。  
+答案：(B)
+維生素 B2 以 FMN 型式擔任哪種酵素的輔酶？  (A) 琥珀酸去氫酶 (B) 磷酸吡哆醇氧化酶 (C) 穀胱甘肽還原酶 (D) 單胺氧化酶。  
+答案：(B) （註：琥珀酸去氫酶使用 FAD）
+下列何處的維生素 C 濃度是儲存量最佳指標？  (A) 血清 (B) 白血球 (C) 紅血球 (D) 尿液。  
+答案：(B)
+--------------------------------------------------------------------------------
+十一、 最新 DRIs 第八版與生命期營養 (114/115 核心考點)
+依據第八版 DRIs，有關維生素 B12 的訂定敘述何者錯誤？ (A) 成年人僅訂定足夠攝取量 (AI) (B) 嬰兒 AI 依據母乳平均攝取量 (C) 沒有上限攝取量 (D) 平均需要量考量預防貧血指標。
+答案：(A) （註：成年人有訂定 EAR 與 RDA）
+關於「鈣」的建議攝取量，下列何者正確？ (A) 建議哺乳期應額外增加 300mg (B) 51~70 歲建議攝取 1,000 mg/d (C) 鈣建議量男女有別 (D) 鈣僅採用 AI 值。
+答案：(B) （註：哺乳期不需增加鈣）
+現行國人 DRIs 中，嬰兒期的階段劃分為？ (A) 0~6 月、7~12 月 (B) 0~4 月、5~12 月 (C) 0~3 月、4~12 月。
+答案：(A)
+根據第八版 DRIs，關於「碘」的建議，下列組合何者正確？ ①成人 150 μg ②孕婦 225 μg ③哺乳婦 250 μg。 (A) ①② (B) ①③ (C) ①②③。
+答案：(C)
+當 65 歲以上人口占總人口比率分別達到 7%、14%、21% 時，其定義分別為何？
+答案：高齡化社會、高齡社會、超高齡社會 。`;
+
+        function parseQuestions(text) {
+            const lines = text.split('\n');
+            let currentCategory = "綜合測驗";
+            let currentQText = "";
+            let questions = [];
+
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+
+                if (/^[一二三四五六七八九十]、/.test(line) && !line.includes('題庫')) {
+                    currentCategory = line;
+                    currentQText = "";
+                    continue;
+                }
+                if (line.includes('----') || line.startsWith('姓名：') || line.includes('核心考點') || line.includes('考試題庫')) continue;
+
+                let ansIndex = line.indexOf("答案：");
+                if (ansIndex !== -1) {
+                    let qPart = line.substring(0, ansIndex).trim();
+                    let aPart = line.substring(ansIndex + 3).trim();
+
+                    if (qPart) {
+                        currentQText += (currentQText ? "\n" : "") + qPart;
+                    }
+
+                    let parts = currentQText.split(/(?=\([A-E]\)\s*)/);
+                    let mainQ = parts[0].trim();
+                    let opts = parts.slice(1).map(p => p.trim());
+                    
+                    let ansMatch = aPart.match(/\(([A-E])\)/);
+                    let correctLetter = ansMatch ? ansMatch[1] : null;
+
+                    questions.push({
+                        id: questions.length + 1,
+                        category: currentCategory,
+                        question: mainQ,
+                        options: opts,
+                        correctLetter: correctLetter,
+                        rawAnswer: aPart,
+                        isShortAnswer: opts.length === 0
+                    });
+
+                    currentQText = ""; 
+                } else {
+                    currentQText += (currentQText ? "\n" : "") + line;
+                }
+            }
+            return questions;
+        }
+
+        function App() {
+            const allQuestions = useMemo(() => parseQuestions(rawData), []);
+            const [categories, setCategories] = useState([]);
+            const [mode, setMode] = useState('menu'); 
+            const [activeQuestions, setActiveQuestions] = useState([]);
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [userAnswers, setUserAnswers] = useState({});
+            const [showAnswerState, setShowAnswerState] = useState(false);
+
+            useEffect(() => {
+                const cats = [...new Set(allQuestions.map(q => q.category))];
+                setCategories(["全部題目", "錯題本", ...cats]);
+            }, [allQuestions]);
+
+            const startQuiz = (cat) => {
+                let filtered = [];
+                if (cat === "錯題本") {
+                    filtered = allQuestions.filter(q => userAnswers[q.id]?.isCorrect === false);
+                    if (filtered.length === 0) {
+                        alert("太棒了！您的錯題本目前是空的！");
+                        return;
+                    }
+                } else if (cat === "全部題目") {
+                    filtered = allQuestions;
+                } else {
+                    filtered = allQuestions.filter(q => q.category === cat);
+                }
+                
+                setActiveQuestions([...filtered].sort(() => Math.random() - 0.5));
+                setCurrentIndex(0);
+                setMode('quiz');
+                setShowAnswerState(false);
+            };
+
+            const handleOptionClick = (optionStr) => {
+                const currentQ = activeQuestions[currentIndex];
+                if (userAnswers[currentQ.id]) return; 
+
+                const selectedLetter = optionStr.match(/^\(([A-E])\)/)[1];
+                const isCorrect = selectedLetter === currentQ.correctLetter;
+
+                setUserAnswers(prev => ({
+                    ...prev,
+                    [currentQ.id]: { selected: selectedLetter, isCorrect }
+                }));
+            };
+
+            const handleShortAnswerReveal = () => {
+                const currentQ = activeQuestions[currentIndex];
+                if (userAnswers[currentQ.id]) return;
+                
+                setShowAnswerState(true);
+                setUserAnswers(prev => ({
+                    ...prev,
+                    [currentQ.id]: { selected: "revealed", isCorrect: true } 
+                }));
+            };
+
+            const nextQuestion = () => {
+                if (currentIndex < activeQuestions.length - 1) {
+                    setCurrentIndex(prev => prev + 1);
+                    setShowAnswerState(false);
+                } else {
+                    setMode('result');
+                }
+            };
+
+            const currentQ = activeQuestions[currentIndex];
+            const qState = currentQ ? userAnswers[currentQ.id] : null;
+            const isAnswered = !!qState;
+
+            if (mode === 'menu') {
+                return (
+                    <div className="min-h-screen p-4 md:p-8 font-sans">
+                        <div className="max-w-3xl mx-auto">
+                            <header className="text-center mb-10 mt-6">
+                                <h1 className="text-3xl md:text-4xl font-bold text-indigo-700 mb-2 flex items-center justify-center gap-3">
+                                    <BookOpen size={32} /> 營養學 150 題全收錄刷題系統
+                                </h1>
+                                <p className="text-slate-500">考前衝刺必備！涵蓋生命期營養、生理學、礦物質等全領域考題</p>
+                            </header>
+
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+                                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                                    <ListIcon size={24} className="text-indigo-500"/> 請選擇練習範圍
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {categories.map((cat, idx) => {
+                                        const count = cat === "全部題目" 
+                                            ? allQuestions.length 
+                                            : cat === "錯題本" 
+                                            ? Object.values(userAnswers).filter(a => !a.isCorrect).length 
+                                            : allQuestions.filter(q => q.category === cat).length;
+                                        
+                                        return (
+                                            <button
+                                                key={idx}
+                                                onClick={() => startQuiz(cat)}
+                                                className={`flex justify-between items-center p-4 rounded-xl text-left transition-all ${
+                                                    cat === "錯題本" 
+                                                    ? 'bg-rose-50 hover:bg-rose-100 border border-rose-100 text-rose-700' 
+                                                    : cat === "全部題目"
+                                                    ? 'bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 text-indigo-700'
+                                                    : 'bg-slate-50 hover:bg-slate-100 border border-slate-100'
+                                                }`}
+                                            >
+                                                <span className="font-medium truncate pr-4">{cat}</span>
+                                                <span className="text-sm px-3 py-1 bg-white/60 rounded-full font-bold shadow-sm shrink-0">
+                                                    {count} 題
+                                                </span>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (mode === 'result') {
+                const correctCount = activeQuestions.filter(q => userAnswers[q.id]?.isCorrect).length;
+                const score = Math.round((correctCount / activeQuestions.length) * 100);
+
+                return (
+                    <div className="min-h-screen p-4 md:p-8 flex items-center justify-center">
+                        <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl border border-slate-200 p-8 text-center">
+                            <div className="w-24 h-24 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Award size={48} />
+                            </div>
+                            <h2 className="text-3xl font-bold mb-2">測驗完成！</h2>
+                            <p className="text-slate-500 mb-8">您在本次挑戰中完成了 {activeQuestions.length} 道題目</p>
+                            
+                            <div className="text-6xl font-black text-indigo-600 mb-8">
+                                {score} <span className="text-2xl text-slate-400 font-medium">分</span>
+                            </div>
+
+                            <div className="flex gap-4 justify-center">
+                                <button 
+                                    onClick={() => setMode('menu')}
+                                    className="flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors"
+                                >
+                                    <BookOpen size={20} /> 回到目錄
+                                </button>
+                                <button 
+                                    onClick={() => startQuiz('錯題本')}
+                                    className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors shadow-lg shadow-indigo-200"
+                                >
+                                    <RotateCcw size={20} /> 複習錯題
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen p-4 md:p-8 font-sans">
+                    <div className="max-w-3xl mx-auto">
+                        {/* Header & Progress */}
+                        <div className="flex items-center justify-between mb-8">
+                            <button 
+                                onClick={() => setMode('menu')}
+                                className="p-2 bg-white text-slate-500 hover:text-slate-800 rounded-full shadow-sm"
+                            >
+                                <ChevronLeft size={24} />
+                            </button>
+                            <div className="text-center">
+                                <div className="text-sm font-bold text-indigo-500 mb-1">{currentQ?.category}</div>
+                                <div className="text-xs text-slate-400 font-medium tracking-widest">QUESTION {currentIndex + 1} OF {activeQuestions.length}</div>
+                            </div>
+                            <div className="w-10"></div> 
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="w-full bg-slate-200 h-2 rounded-full mb-10 overflow-hidden">
+                            <div 
+                                className="bg-indigo-500 h-full transition-all duration-500 ease-out"
+                                style={{ width: (activeQuestions.length > 0 ? (currentIndex / activeQuestions.length) * 100 : 0) + '%' }}
+                            ></div>
+                        </div>
+
+                        {/* Question Card */}
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-10 mb-6">
+                            <h2 className="text-xl md:text-2xl font-semibold leading-relaxed mb-8">
+                                {currentQ?.question}
+                            </h2>
+
+                            <div className="space-y-3">
+                                {currentQ?.isShortAnswer ? (
+                                    <div className="text-center py-6">
+                                        {!showAnswerState ? (
+                                            <button 
+                                                onClick={handleShortAnswerReveal}
+                                                className="flex items-center justify-center gap-2 w-full py-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl font-medium transition-colors"
+                                            >
+                                                <Eye size={20} /> 顯示解答
+                                            </button>
+                                        ) : (
+                                            <div className="p-6 bg-emerald-50 text-emerald-800 rounded-2xl border border-emerald-100 text-left">
+                                                <div className="text-sm font-bold text-emerald-600 mb-2 flex items-center gap-2">
+                                                    <CheckCircle size={18}/> 標準答案
+                                                </div>
+                                                <div className="text-lg font-medium">{currentQ?.rawAnswer}</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    currentQ?.options.map((opt, idx) => {
+                                        const optLetterMatch = opt.match(/^\(([A-E])\)/);
+                                        const optLetter = optLetterMatch ? optLetterMatch[1] : '';
+                                        
+                                        let btnClass = "w-full text-left p-4 md:p-5 rounded-2xl border-2 transition-all duration-200 flex items-start gap-4 ";
+                                        let icon = <div className="w-6 h-6 shrink-0 rounded-full border-2 border-slate-300 flex items-center justify-center text-xs font-bold text-slate-400 mt-0.5">{optLetter}</div>;
+
+                                        if (isAnswered) {
+                                            if (optLetter === currentQ.correctLetter) {
+                                                btnClass += "bg-emerald-50 border-emerald-500 text-emerald-900";
+                                                icon = <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={24} />;
+                                            } else if (qState.selected === optLetter && !qState.isCorrect) {
+                                                btnClass += "bg-rose-50 border-rose-500 text-rose-900";
+                                                icon = <XCircle className="text-rose-500 shrink-0 mt-0.5" size={24} />;
+                                            } else {
+                                                btnClass += "bg-white border-slate-100 text-slate-400 opacity-50";
+                                            }
+                                        } else {
+                                            btnClass += "bg-white border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer";
+                                        }
+
+                                        return (
+                                            <button 
+                                                key={idx}
+                                                disabled={isAnswered}
+                                                onClick={() => handleOptionClick(opt)}
+                                                className={btnClass}
+                                            >
+                                                {icon}
+                                                <span className="text-base md:text-lg">{opt.replace(/^\([A-E]\)\s*/, '')}</span>
+                                            </button>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Feedback & Next Button */}
+                        <div className="h-24"> 
+                            {isAnswered && (
+                                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                                    <div className="flex-1 bg-indigo-50 text-indigo-800 p-4 rounded-2xl flex items-start gap-3 w-full">
+                                        <AlertCircle className="shrink-0 mt-0.5" size={20} />
+                                        <div>
+                                            <span className="font-bold text-sm block mb-1">詳解 / 備註</span>
+                                            <span className="text-sm leading-relaxed">{currentQ?.rawAnswer}</span>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={nextQuestion}
+                                        className="w-full md:w-auto px-8 py-4 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-slate-200 transition-all shrink-0"
+                                    >
+                                        {currentIndex < activeQuestions.length - 1 ? '下一題' : '完成測驗'} <ChevronRight size={20} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+```eof
+
+```
